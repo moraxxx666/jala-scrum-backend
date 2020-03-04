@@ -1,7 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 
 export interface Story extends Document {
-  title: string;
+  story: string;
   description: string;
   createdBy: string;
   active: boolean;
@@ -9,11 +9,11 @@ export interface Story extends Document {
 }
 
 const StorySchema = new Schema({
-  title: { type: String },
+  story: { type: String },
   description: { type: String },
-  createdBy: { type: String },
+  votes: { type: Array },
   active: { type: Boolean, default: true },
-  votes: { type: Array, default: [] }
+  
 });
 
 export default model<Story>("storie", StorySchema);

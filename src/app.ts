@@ -1,23 +1,12 @@
 import express from "express";
-import morgan from "morgan";
-import helmet from "helmet";
-import cors from "cors";
 import IO from "socket.io";
 import config from "./config";
 import("./database");
-import APIRoutes from "./routes/api.routes";
+import StoryModel, { Story } from "./models/story.model"
 // Initialization
 const app = express();
 
-//midlewares
-app.use(morgan("dev"));
-app.use(helmet());
-app.use(cors());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
-// rutas
-app.use("/api", APIRoutes);
 //Iniciando el server
 const HttpServer = app.listen(config.PORT, () => {
   console.log(`App runing on port ${config.PORT}`);
@@ -27,19 +16,30 @@ const io = IO(HttpServer)
 io.on('connection', (socket) => {
 
   // New User in The App
+  
+  socket.emit("Message","Welcome to the Scrum Poker App")
 
-  socket.emit('saludo', "hola")
-  ++ConnectedPeople
-  console.log("New user Register: " + ConnectedPeople)
   // New Room has been created
   socket.on("new room", () => {
     console.log("New Room created")
   })
 
-  //testing
-  socket.on("boton",(obj:string)=>{
-    console.log(obj)
-    socket.emit("saludo",obj)
+  //Create Room
+  socket.on("Create Room", async (obj: any) => {
+
+    try {
+      let NewRoom = new StoryModel({
+        story: obj.story,
+        description: obj.description
+      })
+      const res = await NewRoom.save()
+      socket.emit("Message", "Room succesfuly created")
+      socket.emit("Room Created", res)
+    
+
+    } catch (error) {
+      socket.emit("mensaje", error)
+    }
   })
 
   // 
@@ -47,6 +47,7 @@ io.on('connection', (socket) => {
 
     --ConnectedPeople
     console.log("A user has left the app", ConnectedPeople)
+    socket.emit('close')
   })
 
 
