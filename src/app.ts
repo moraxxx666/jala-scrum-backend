@@ -24,7 +24,7 @@ io.on("connection", socket => {
   // New User in The App
 
   //Create Room
-  socket.on("Create Room", async (obj: any, name: string) => {
+  socket.on("CreateRoom", async (obj: any, name: string) => {
     try {
       let RoomObject = <Room>{
         story: obj.story,
@@ -34,13 +34,12 @@ io.on("connection", socket => {
       let NewRoom = await RoomController.CreateRoom(RoomObject);
 
       await socket.emit("Message", "Room succesfuly created");
-      await socket.emit("Room Created", NewRoom);
+      await socket.emit("RoomCreated", NewRoom);
     } catch (error) {
       socket.emit("Message", error);
     }
   });
-  // Developer connect into a room
-  socket.on("Connect Into a Room", async id => {
+  socket.on("ConnectIntoRoom", async id => {
     try {
       //Verify if Exists the room
       let Room = await RoomController.ObtainRoomIfExists(id);
@@ -98,7 +97,6 @@ io.on("connection", socket => {
     let boards = await TrelloAPI.GetBoards();
     socket.emit("ReturnBoards", boards);
   });
-
   socket.on("GetListFromBoard", async IDBoard => {
     let list = await TrelloAPI.GetListFromBoard(IDBoard);
     socket.emit("ReturnList", list);
@@ -121,8 +119,8 @@ io.on("connection", socket => {
     socket.join(IDList);
     io.in(IDList).emit("NewUserTrello");
   });
-  socket.on("RefreshStorie", (storie, id,cards) => {
-    
-    io.in(id).emit("RefreshedStorie", storie,cards);
+  socket.on("RefreshStorie", (storie, id, cards) => {
+
+    io.in(id).emit("RefreshedStorie", storie, cards);
   });
 });
