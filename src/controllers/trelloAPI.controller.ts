@@ -12,8 +12,7 @@ class TrelloAPIController {
       let obj = {
         name: el.name,
         description: el.desc,
-        IDBoard: el.id,
-        lists: []
+        IDBoard: el.id
       };
       boards.push(obj);
     });
@@ -24,6 +23,7 @@ class TrelloAPIController {
       `https://api.trello.com/1/board/${IDBoard}/lists?key=${config.KEY_TRELLO}&token=${config.TOKEN_TRELLO}`
     );
     const res2 = await res.json();
+    
     return await res2;
   }
   async GetCardsFromList(IDlist: any) {

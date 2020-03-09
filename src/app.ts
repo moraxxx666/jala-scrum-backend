@@ -91,6 +91,14 @@ io.on("connection", socket => {
       }
     }
   });
+  socket.on("ReviewRoom", async RoomID => {
+    let room = await RoomController.ReviewRoom(RoomID);
+    if (room) {
+      socket.emit("RoomReviewed", room);
+    } else {
+      socket.emit("NoRoom", "Room not found");
+    }
+  });
 
   // TRELLO EVENTS
   socket.on("GetBoards", async () => {
@@ -108,19 +116,55 @@ io.on("connection", socket => {
       if (room !== null) {
         socket.join(IDList);
         socket.emit("JoinedRoom", room);
+        let UsersInARoom = io.sockets.adapter.rooms[IDList] || 0;
+        await io.in(IDList).emit("UserConnected", UsersInARoom.length);
       } else {
-        socket.emit("Message", "error asd");
+        socket.emit("Message", "Internal Error");
       }
     } catch (error) {
-      socket.emit("Message", "error as");
+      socket.emit("NoRoom", "Room not found");
     }
   });
-  socket.on("VoterJoinRoomTrello", (IDList: string) => {
-    socket.join(IDList);
-    io.in(IDList).emit("NewUserTrello");
-  });
-  socket.on("RefreshStorie", (storie, id, cards) => {
+  socket.on("UserDisconnected", async IDList => {
+    await socket.leave(IDList);
+    let UsersInARoom = io.sockets.adapter.rooms[IDList] || 0;
 
-    io.in(id).emit("RefreshedStorie", storie, cards);
+    await io.in(IDList).emit("UD", UsersInARoom.length);
+  });
+  socket.on("ChangeStorie", async (storie: any, IDList: string) => {
+    const room = await RoomTrelloController.ChangeCurrentStorie(storie, IDList);
+    if (room) {
+      await io.in(IDList).emit("StorieChanged", room);
+    } else {
+      await io.in(IDList).emit("Message", "Something Went Wrong");
+    }
+  });
+  socket.on(
+    "NewVote",
+    async (IDList: string, IDcard: string, name: any, val: string) => {
+      let HasVoted = await RoomTrelloController.VerifyVote(
+        IDList,
+        IDcard,
+        name
+      );
+      if (HasVoted) {
+        await socket.emit("DuplicateVote", "You have already vote");
+      } else {
+        let room = await RoomTrelloController.Vote(IDList, IDcard, name, val);
+        if (room) {
+          await io.in(IDList).emit("Voted", room);
+        } else {
+          io.in(IDList).emit("Message", "Error");
+        }
+      }
+    }
+  );
+  socket.on("ResetVotes", async (IDList: string, IDcard: string) => {
+    let room = await RoomTrelloController.ResetVotes(IDList, IDcard);
+    if (room) {
+      io.in(IDList).emit("VotesReseted", room);
+    } else {
+      io.in(IDList).emit("Message", "Error");
+    }
   });
 });

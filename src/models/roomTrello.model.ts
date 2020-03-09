@@ -4,6 +4,8 @@ export interface TrelloRoom extends Document {
   stories: object[];
   IDList?: string;
   cards?: object[];
+  votes?: object[];
+  currentStorie?: object;
 }
 
 const TrelloRoomSchema = new Schema({
@@ -37,7 +39,9 @@ const TrelloRoomSchema = new Schema({
         display: "13"
       }
     ]
-  }
+  },
+  votes: { type: Array, default: [] },
+  currentStorie: { type: Object, default: null }
 });
 
 export default model<TrelloRoom>("TrelloRoom", TrelloRoomSchema);
